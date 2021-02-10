@@ -187,7 +187,7 @@ class EDClient(mqtt.Client):
         by default root subscription ignores messages
         """
         logging.debug(
-            f"ignoring unhandeld subscription: {msg.topic}, len of data{len(msg.payload)}"
+            f"ignoring unhandeld subscription: {msg.topic}, size of data {_size_of(msg.payload)}KB"
         )
 
     def add_subscription(self, channel: EDChannel, callback: MessageCallback):
@@ -237,7 +237,7 @@ class EDClient(mqtt.Client):
         encoded = pickle.dumps(packet)
 
         logging.debug(
-            f"{self.client_id} publish payload on {channel.channel}: packet size {round(sys.getsizeof(encoded)/1000, 2)}KB"
+            f"{self.client_id} publish payload on {channel.channel}: packet size {_size_of(packet)}KB"
         )
         info = super().publish(topic=channel.channel,
                                payload=encoded,
@@ -249,3 +249,10 @@ class EDClient(mqtt.Client):
             .set_payload(payload) \
             .set_sender(self.client_id)
         return packet
+
+
+def _size_of(packet: Any):
+    if isinstance(packet, EDPacket):
+        return round(sys.getsizeof(pickle.dumps(packet)) / 1000, 2)
+
+    return round(sys.getsizeof(packet) / 1000, 2)
